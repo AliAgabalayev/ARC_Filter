@@ -26,8 +26,7 @@ def load_image(file_path: Path) -> tuple[np.ndarray | None, bool]:
     try:
         if is_tiff:
             return tiff.imread(file_path), True
-        img = cv2.imread(str(file_path), cv2.IMREAD_UNCHANGED)
-        return img, False
+        return cv2.imread(str(file_path), cv2.IMREAD_UNCHANGED), False
     except Exception as e:
         print(f"Error reading {file_path.name}: {e}")
         return None, False
@@ -35,42 +34,48 @@ def load_image(file_path: Path) -> tuple[np.ndarray | None, bool]:
 
 def process_color_space(img: np.ndarray, max_val: float, is_tiff: bool) -> tuple[np.ndarray, np.ndarray]:
     """Normalization and RGB to HSV conversion"""
-    # Convert to RGB double [0..1]. Reverse channels only for OpenCV (BGR layout)
-    img_rgb = img.astype(np.float64) / max_val if is_tiff else img[..., ::-1].astype(np.float64)
+    # Bulletproof: Keep only the first 3 channels (RGB/BGR), ignoring Alpha if present
+    img_3ch = img[..., :3]
     
-    # OpenCV native conversion to HSV (Hue is [0..360] for float32, Saturation/Value are [0..1])
-    img_hsv = cv2.cvtColor(img_rgb.astype(np.float32), cv2.COLOR_RGB2HSV).astype(np.float64)
+    # Convert to RGB float32 [0..1]. Reverse channels only for OpenCV (BGR layout)
+    if is_tiff:
+        img_rgb = img_3ch.astype(np.float32) / max_val
+    else:
+        img_rgb = img_3ch[..., ::-1].astype(np.float32) / max_val
     
-    # Extract Value channel for the ARC filter
-    return img_hsv[:, :, 2], img_hsv
+    # OpenCV native conversion to HSV (Hue is [0..360], Saturation/Value are [0..1])
+    img_hsv = cv2.cvtColor(img_rgb, cv2.COLOR_RGB2HSV)
+    
+    # Extract Value channel for the ARC filter as float64 (leaving Hue/Saturation completely untouched)
+    return img_hsv[:, :, 2].astype(np.float64), img_hsv
 
 
 def save_image(out_path: Path, img_processed: np.ndarray, is_color: bool, 
                bit_depth: int, is_tiff: bool, img_hsv: np.ndarray | None = None, max_val: float = 255.0) -> None:
     if is_color and img_hsv is not None:
-        # Inject the filtered brightness back
-        img_hsv[:, :, 2] = img_processed
+        # Inject the filtered brightness back (cast to float32 to match OpenCV)
+        img_hsv[:, :, 2] = img_processed.astype(np.float32)
         
-        # Convert back to standard RGB double [0..1]
-        img_rgb_out = cv2.cvtColor(img_hsv.astype(np.float32), cv2.COLOR_HSV2RGB).astype(np.float64)
+        # Convert back to standard RGB float32 [0..1] directly, without modifying Hue
+        img_rgb_out = cv2.cvtColor(img_hsv, cv2.COLOR_HSV2RGB)
         
         # Quantize to target bit-depth
         if bit_depth > 8 and is_tiff:
             img_out = np.round(img_rgb_out * max_val).astype(np.uint16)
             tiff.imwrite(out_path, img_out)
         else:
-            img_out = np.round(img_rgb_out * 255.0).astype(np.uint8)
+            img_out = np.round(img_rgb_out * max_val).astype(np.uint8)
             if is_tiff:
-                tiff.imwrite(out_path, img_out)  # Tifffile expects RGB
+                tiff.imwrite(out_path, img_out)
             else:
-                cv2.imwrite(str(out_path), img_out[..., ::-1])  # OpenCV expects BGR
+                cv2.imwrite(str(out_path), img_out[..., ::-1])
     else:
         # Standard Grayscale quantization pathway
         if bit_depth > 8 and is_tiff:
             img_out = np.round(img_processed * max_val).astype(np.uint16)
             tiff.imwrite(out_path, img_out)
         else:
-            img_out = np.round(img_processed * 255.0).astype(np.uint8)
+            img_out = np.round(img_processed * max_val).astype(np.uint8)
             tiff.imwrite(out_path, img_out) if is_tiff else cv2.imwrite(str(out_path), img_out)
 
 
@@ -106,13 +111,22 @@ def main():
             # 2. Structural dimension and bit depth evaluation
             bit_depth = get_bit_depth(img)
             max_val = float((2 ** bit_depth) - 1)
-            is_color = (img.ndim == 3 and img.shape[2] == 3)
+            
+            # FIXED: Handles both 3-channel (RGB) and 4-channel (RGBA) color images safely
+            is_color = (img.ndim == 3 and img.shape[2] in (3, 4))
             
             # 3. Brightness channel extraction and normalization
             if is_color:
                 img_normalized, img_hsv = process_color_space(img, max_val, is_tiff)
             else:
-                img_gray = img[:, :, 0] if img.ndim == 3 else img
+                if img.ndim == 3:
+                    # Handle grayscale images that were loaded with multiple identical channels
+                    if img.shape[2] == 4:
+                        img_gray = cv2.cvtColor(img, cv2.COLOR_BGRA2GRAY) if not is_tiff else cv2.cvtColor(img, cv2.COLOR_RGBA2GRAY)
+                    else:
+                        img_gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY) if not is_tiff else cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
+                else:
+                    img_gray = img
                 img_normalized = img_gray.astype(np.float64) / max_val
                 img_hsv = None
                 
