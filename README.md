@@ -1,3 +1,4 @@
+[![DOI](https://zenodo.org)](https://doi.org/10.5281/zenodo.21934705)
 # Adaptive Rank-Cluster Image Filter (ARC-Filter)
 
 This repository contains the official high-performance implementation of the **Adaptive Rank-Cluster Image Filter (ARC-Filter)**, synchronized across two major scientific computing platforms: **MATLAB** and **Python (NumPy/SciPy)**.
