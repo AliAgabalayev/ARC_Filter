@@ -47,15 +47,16 @@ The “Gemini 3.6 Flash” multimodal AI model by Google was utilized during the
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## How to Cite
-If you use this filter or code in your scientific research, please cite it as follows:
+If you apply these specific software implementations, please cite the GitHub repository:
 
 ```bibtex
 @misc{ARC_Filter_2026,
-  author = {Pozdnyakov, Dmitry},
-  title = {Adaptive Rank-Cluster Image Filter (ARC-Filter)},
-  year = {2026},
-  publisher = {GitHub},
-  journal = {GitHub Repository},
-  howpublished \(= {\url{https://github.com}}\)}
+  author       = {Pozdnyakov, Dmitry},
+  title        = {{Adaptive Rank-Cluster Image Filter (ARC-Filter)}},
+  year         = {2026},
+  publisher    = {GitHub},
+  howpublished = {\url{https://github.com/DrDmitryPozdnyakov/ARC_Filter}},
+  note         = {GitHub Repository}
+}
 ```
 
