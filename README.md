@@ -60,3 +60,13 @@ If you apply these specific software implementations, please cite the GitHub rep
 }
 ```
 
+If you use the developed algorithms, code, or findings in your scientific research, please cite the official arXiv paper:
+
+```bibtex
+@article{pozdnyakov2026image,
+  author    = {Pozdnyakov, Dmitry},
+  title     = {{Image Denoising via the Adaptive Rank-Cluster Filter}},
+  journal   = {arXiv preprint arXiv:2608.15298},
+  year      = {2026}
+}
+```
