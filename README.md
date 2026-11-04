@@ -2,6 +2,8 @@
 
 # Adaptive Rank-Cluster Image Filter (ARC-Filter)
 
+In this fork, I added a Fashionpedia benchmark to test how preprocessing affects RF-DETR segmentation. With mixed synthetic noise, ARC scored **30.82 mask AP** versus **27.96** without filtering. On clean images, ARC lowered mask AP by **0.31 points**. [Results and evaluation setup](#downstream-evaluation)
+
 This repository contains the official high-performance implementation of the **Adaptive Rank-Cluster Image Filter (ARC-Filter)**, synchronized across two major scientific computing platforms: **MATLAB** and **Python (NumPy/SciPy)**.
 
 The filter is specifically optimized for advanced Computer Vision tasks, medical imaging (e.g., high bit-depth X-Ray/CT scans), and scientific data analysis.
