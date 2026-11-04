@@ -1,0 +1,3 @@
+# Extra dependencies for scripts/arc_full_valid.py (install together with requirements.txt)
+rfdetr==1.10.0
+pycocotools==2.0.11
