@@ -32,6 +32,19 @@ Rigorous mathematical validation confirms **99.99% pixel-to-pixel structural ide
 
 We evaluated ARC as a preprocessing step for a fixed RF-DETR Seg Small model on 1,158 Fashionpedia validation images. Under mixed Gaussian noise (σ = 0.10 on a [0, 1] scale) and 1% salt-and-pepper noise, ARC achieved 30.82 mask AP, compared with 29.27 for median filtering, 27.96 without filtering, and 27.87 for bilateral filtering. Results were averaged over three noise seeds at a detection score cutoff of 0.05. On the original images, ARC reduced mask AP by 0.31 points relative to no filtering. In a separate 30-image check with one noise seed, lowering the cutoff from 0.05 to 0.001 narrowed ARC’s lead over median filtering from 1.26 to 0.59 points. Install the evaluation dependencies with `pip install -r requirements-fashionpedia.txt`. The experiment requires the Fashionpedia validation split and the Fashionpedia-finetuned RF-DETR Seg Small checkpoint used here. The weights are not included in this repository. Run `python scripts/arc_full_valid.py --help` for the expected paths and evaluation options.
 
+### Experimental ARC13 pilot
+
+The experimental 13-pixel neighborhood extends the original 3×3 with four axial pixels at distance two. Both variants take the median of all 13 values; trimming two or three values from each end leaves 9 or 7 values for Otsu, respectively. These are experimental alternatives, not established improvements over ARC9.
+
+With the validation data and checkpoint described above, run a 30-image pilot using an external JSON list of image IDs and output directory:
+
+```bash
+python scripts/arc13_pilot.py --image-ids /path/to/image_ids.json --out /path/to/pilot
+python scripts/arc13_pilot.py --evaluate-only --out /path/to/pilot --replay-out /path/to/replay
+```
+
+Replay uses saved predictions and provenance with matching local annotations, without loading the model. Output directories must be outside the repository; replay outputs must be fresh. See `python scripts/arc13_pilot.py --help` for required inputs and details.
+
 ## Quick Start (Python)
 1. Clone the repository and navigate to the project root.
 2. Place your source images into the `Images/` subfolder.
